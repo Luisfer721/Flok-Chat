@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Flok</title>
+    <style>
+        :root {
+            --bg-dark: #0f1216;
+            --header-footer: #161b22;
+            --accent-cyan: #00d2ff;
+            --accent-pink: #f9a8d4;
+            --text-main: #e6edf3;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            background-color: var(--bg-dark);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        #app-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100dvh;
+            height: 100vh;
+        }
+
+        header {
+            padding: 15px 20px;
+            padding-top: calc(15px + env(safe-area-inset-top));
+            background: rgba(22, 27, 34, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #30363d;
+            flex-shrink: 0;
+        }
+
+        header span {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #call-btn {
+            background: transparent;
+            border: 1.5px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-image: radial-gradient(#21262d 0.8px, transparent 0.8px);
+            background-size: 24px 24px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            font-size: 17px;
+            line-height: 1.4;
+            font-weight: 600;
+            color: white;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
+            word-wrap: break-word;
+        }
+
+        /* Tus mensajes (Cian) */
+        .me {
+            align-self: flex-end;
+            background: rgba(0, 210, 255, 0.15);
+            border: 1.5px solid var(--accent-cyan);
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Mensajes de ella (Rosa) */
+        .friend {
+            align-self: flex-start;
+            background: rgba(249, 168, 212, 0.12);
+            border: 1.5px solid var(--accent-pink);
+            border-bottom-left-radius: 4px;
+        }
+
+        footer {
+            padding: 12px 20px;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            background: var(--header-footer);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-top: 1px solid #30363d;
+            flex-shrink: 0;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 15px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: white;
+            outline: none;
+            font-size: 16px;
+        }
+
+        #send-btn {
+            background: linear-gradient(135deg, var(--accent-cyan), #0082ad);
+            border: none;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app-wrapper">
+        <header>
+            <span>Flok Chat</span>
+            <button id="call-btn">Llamar</button>
+        </header>
+
+        <div id="chat-container" id="chat-box">
+        </div>
+
+        <footer>
+            <input type="text" id="msg-input" placeholder="Escribe un mensaje..." autocomplete="off">
+            <button id="send-btn">➔</button>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURACIÓN (Reemplaza con tus datos reales de Firebase)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCtVjpDNz-9KpVx-i8CPnaAKnOY-gyugGc",
+            authDomain: "flok-chat.firebaseapp.com",
+            projectId: "flok-chat",
+            storageBucket: "flok-chat.firebasestorage.app",
+            messagingSenderId: "418590940359",
+            appId: "1:418590940359:web:d38c841c408563fbb672e2"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const colRef = collection(db, "mensajes");
+
+        // Identificador de usuario único por navegador
+        if (!localStorage.getItem('flok_user_id')) {
+            localStorage.setItem('flok_user_id', 'user_' + Math.random().toString(36).substr(2, 9));
+        }
+        const myId = localStorage.getItem('flok_user_id');
+
+        const btnEnviar = document.getElementById('send-btn');
+        const inputMsg = document.getElementById('msg-input');
+        const chatContainer = document.getElementById('chat-container');
+
+        // Función para enviar mensaje
+        async function enviarMensaje() {
+            const texto = inputMsg.value.trim();
+            if (texto !== "") {
+                await addDoc(colRef, {
+                    texto: texto,
+                    senderId: myId,
+                    fecha: serverTimestamp()
+                });
+                inputMsg.value = "";
+                inputMsg.focus();
+            }
+        }
+
+        // Eventos de envío
+        btnEnviar.addEventListener('click', enviarMensaje);
+        inputMsg.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') enviarMensaje();
+        });
+
+        // Escuchar mensajes en tiempo real
+        const q = query(colRef, orderBy("fecha", "asc"));
+        onSnapshot(q, (snapshot) => {
+            chatContainer.innerHTML = "";
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const div = document.createElement('div');
+
+                // Si el senderId es el mío, clase 'me' (Cian), si no 'friend' (Rosa)
+                const claseUsuario = (data.senderId === myId) ? 'me' : 'friend';
+
+                div.classList.add('message', claseUsuario);
+                div.innerHTML = `<div class="message-text">${data.texto}</div>`;
+                chatContainer.appendChild(div);
+            });
+            // Auto-scroll al final
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+
+        // Llamada Jitsi
+        document.getElementById('call-btn').addEventListener('click', () => {
+            window.open("https://meet.jit.si/FlokChat_" + firebaseConfig.projectId, "_blank");
+        });
+    </script>
+</body>
+
+</html>
