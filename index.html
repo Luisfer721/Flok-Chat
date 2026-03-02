@@ -206,9 +206,10 @@
         const colRef = collection(db, "mensajes");
 
         // --- SISTEMA DE BLOQUEO ---
-        const passCorrecta = "sukablyat";
         const lockScreen = document.getElementById('lock-screen');
-
+        const passCodificada = "c3VrYWJseWF0"; //
+        const passCorrecta = atob(passCodificada); //
+        
         if (localStorage.getItem('flok_autenticado') === 'true') {
             lockScreen.style.display = 'none';
         }
@@ -272,3 +273,4 @@
     </script>
 </body>
 </html>
+
