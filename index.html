@@ -24,28 +24,27 @@
             --text-main: #e6edf3;
         }
 
-        /* ARREGLO MAESTRO PARA ALTURA EN MÓVILES */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100vh;
-            height: -webkit-fill-available;
+            height: 100%;
             overflow: hidden;
-            position: fixed;
             background-color: var(--bg-dark);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
+        /* PLAN C: Forzamos el wrapper a ser una capa fija sobre la pantalla */
         #app-wrapper {
             display: flex;
             flex-direction: column;
             width: 100%;
-            height: 100vh;
-            height: -webkit-fill-available;
-            position: absolute;
+            position: fixed;
             top: 0;
+            bottom: 0;
             left: 0;
+            right: 0;
+            height: 100%;
         }
 
         header {
@@ -122,8 +121,8 @@
 
         footer {
             padding: 12px 20px;
-            /* Margen extra para que el teclado o la barra de iOS no lo tapen */
-            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            /* Margen de seguridad aumentado para evitar que el navegador lo tape */
+            padding-bottom: calc(45px + env(safe-area-inset-bottom));
             background: var(--header-footer);
             display: flex;
             gap: 10px;
@@ -141,8 +140,6 @@
             color: white;
             outline: none;
             font-size: 16px;
-            /* Evita zoom automático en iPhone */
-            appearance: none;
         }
 
         #send-btn {
