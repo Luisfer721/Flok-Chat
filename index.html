@@ -10,6 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Flok">
     <meta name="mobile-web-app-capable" content="yes">
+
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -249,18 +250,36 @@
         const db = getFirestore(app);
         const colRef = collection(db, "mensajes");
 
+        // --- AUDIO Y NOTIFICACIONES ---
+        const sonidoNotificacion = new Audio('https://raw.githubusercontent.com/Anis-mgh/whatsapp-clone/master/client/public/sounds/notification.mp3');
+
+        async function solicitarPermisos() {
+            if ("Notification" in window) {
+                if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                    await Notification.requestPermission();
+                }
+            }
+        }
+
         const lockScreen = document.getElementById('lock-screen');
         const passCodificada = "c3VrYWJseWF0";
         const passCorrecta = atob(passCodificada);
 
         if (localStorage.getItem('flok_autenticado') === 'true') {
             lockScreen.style.display = 'none';
+            solicitarPermisos();
         }
 
         document.getElementById('unlock-btn').addEventListener('click', () => {
             if (document.getElementById('pass-input').value === passCorrecta) {
                 localStorage.setItem('flok_autenticado', 'true');
                 lockScreen.style.display = 'none';
+                solicitarPermisos();
+                // Desbloqueo silencioso de audio para iOS
+                sonidoNotificacion.play().then(() => {
+                    sonidoNotificacion.pause();
+                    sonidoNotificacion.currentTime = 0;
+                }).catch(() => { });
             } else {
                 alert("Clave incorrecta 🧐");
             }
@@ -294,14 +313,12 @@
         });
 
         const q = query(colRef, orderBy("fecha", "asc"));
+        let primerCarga = true;
 
         onSnapshot(q, (snapshot) => {
             chatContainer.innerHTML = "";
-            snapshot.docs.forEach(doc => {
+            snapshot.docs.forEach((doc, index) => {
                 const data = doc.data();
-
-                // Si no tiene fecha de Firebase todavía, usamos la hora de nuestro celular
-                // para que el mensaje no desaparezca mientras se procesa.
                 const fechaMsg = data.fecha ? data.fecha.toDate() : new Date();
                 const horaLocal = fechaMsg.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -314,7 +331,21 @@
                     <span class="message-time">${horaLocal}</span>
                 `;
                 chatContainer.appendChild(div);
+
+                // --- Lógica de Alerta (Sonido y Notificación) ---
+                // Solo si el mensaje es el último, no es mío y ya pasó la carga inicial
+                if (!primerCarga && index === snapshot.docs.length - 1 && data.senderId !== myId) {
+                    sonidoNotificacion.play().catch(() => console.log("Audio requiere toque"));
+
+                    if (document.hidden && Notification.permission === "granted") {
+                        new Notification("Flok", {
+                            body: data.texto,
+                            icon: "icon.png"
+                        });
+                    }
+                }
             });
+            primerCarga = false;
             chatContainer.scrollTop = chatContainer.scrollHeight;
         });
 
