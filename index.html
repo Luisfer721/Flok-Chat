@@ -3,13 +3,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Flok">
+    <meta name="mobile-web-app-capable" content="yes">
+
     <title>Flok</title>
+    
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
+    
     <style>
         :root {
             --bg-dark: #0f1216;
@@ -19,9 +24,7 @@
             --text-main: #e6edf3;
         }
 
-        html,
-        body {
-
+        html, body {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -98,7 +101,6 @@
             word-wrap: break-word;
         }
 
-        /* Tus mensajes (Cian) */
         .me {
             align-self: flex-end;
             background: rgba(0, 210, 255, 0.15);
@@ -106,7 +108,6 @@
             border-bottom-right-radius: 4px;
         }
 
-        /* Mensajes de ella (Rosa) */
         .friend {
             align-self: flex-start;
             background: rgba(249, 168, 212, 0.12);
@@ -149,18 +150,12 @@
             align-items: center;
         }
 
-        /* Pantalla de bloqueo */
         #lock-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-dark);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             z-index: 9999;
         }
 
@@ -169,28 +164,24 @@
             width: 200px;
             margin-bottom: 10px;
             text-align: center;
-
         }
     </style>
 </head>
 
 <body>
     <div id="lock-screen">
-        <span
-            style="font-size: 24px; font-weight: 800; margin-bottom: 20px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Flok
-            Private</span>
+        <span style="font-size: 24px; font-weight: 800; margin-bottom: 20px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Flok Private</span>
         <input type="password" id="pass-input" placeholder="Contraseña...">
-        <button id="unlock-btn"
-            style="background: var(--accent-cyan); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer;">Entrar</button>
+        <button id="unlock-btn" style="background: var(--accent-cyan); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer;">Entrar</button>
     </div>
+
     <div id="app-wrapper">
         <header>
             <span>Flok Chat</span>
             <button id="call-btn">Llamar</button>
         </header>
 
-        <div id="chat-container" id="chat-box">
-        </div>
+        <div id="chat-container"></div>
 
         <footer>
             <input type="text" id="msg-input" placeholder="Escribe un mensaje..." autocomplete="off">
@@ -199,26 +190,9 @@
     </div>
 
     <script type="module">
-        const passCorrecta = "sukablyat"; // CAMBIA ESTO
-        const lockScreen = document.getElementById('lock-screen');
-
-        // Si ya entró antes, ocultar el bloqueo
-        if (localStorage.getItem('flok_autenticado') === 'true') {
-            lockScreen.style.display = 'none';
-        }
-
-        document.getElementById('unlock-btn').addEventListener('click', () => {
-            if (document.getElementById('pass-input').value === passCorrecta) {
-                localStorage.setItem('flok_autenticado', 'true');
-                lockScreen.style.display = 'none';
-            } else {
-                alert("Clave incorrecta 🧐");
-            }
-        });
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONFIGURACIÓN (Reemplaza con tus datos reales de Firebase)
         const firebaseConfig = {
             apiKey: "AIzaSyCtVjpDNz-9KpVx-i8CPnaAKnOY-gyugGc",
             authDomain: "flok-chat.firebaseapp.com",
@@ -232,7 +206,23 @@
         const db = getFirestore(app);
         const colRef = collection(db, "mensajes");
 
-        // Identificador de usuario único por navegador
+        const lockScreen = document.getElementById('lock-screen');
+        const passCodificada = "c3VrYWJseWF0"; 
+        const passCorrecta = atob(passCodificada); 
+        
+        if (localStorage.getItem('flok_autenticado') === 'true') {
+            lockScreen.style.display = 'none';
+        }
+
+        document.getElementById('unlock-btn').addEventListener('click', () => {
+            if (document.getElementById('pass-input').value === passCorrecta) {
+                localStorage.setItem('flok_autenticado', 'true');
+                lockScreen.style.display = 'none';
+            } else {
+                alert("Clave incorrecta 🧐");
+            }
+        });
+
         if (!localStorage.getItem('flok_user_id')) {
             localStorage.setItem('flok_user_id', 'user_' + Math.random().toString(36).substr(2, 9));
         }
@@ -242,7 +232,6 @@
         const inputMsg = document.getElementById('msg-input');
         const chatContainer = document.getElementById('chat-container');
 
-        // Función para enviar mensaje
         async function enviarMensaje() {
             const texto = inputMsg.value.trim();
             if (texto !== "") {
@@ -256,36 +245,29 @@
             }
         }
 
-        // Eventos de envío
         btnEnviar.addEventListener('click', enviarMensaje);
         inputMsg.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') enviarMensaje();
         });
 
-        // Escuchar mensajes en tiempo real
         const q = query(colRef, orderBy("fecha", "asc"));
         onSnapshot(q, (snapshot) => {
             chatContainer.innerHTML = "";
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
+                if (!data.fecha) return;
                 const div = document.createElement('div');
-
-                // Si el senderId es el mío, clase 'me' (Cian), si no 'friend' (Rosa)
                 const claseUsuario = (data.senderId === myId) ? 'me' : 'friend';
-
                 div.classList.add('message', claseUsuario);
                 div.innerHTML = `<div class="message-text">${data.texto}</div>`;
                 chatContainer.appendChild(div);
             });
-            // Auto-scroll al final
             chatContainer.scrollTop = chatContainer.scrollHeight;
         });
 
-        // Llamada Jitsi
         document.getElementById('call-btn').addEventListener('click', () => {
             window.open("https://meet.jit.si/FlokChat_" + firebaseConfig.projectId, "_blank");
         });
     </script>
 </body>
-
 </html>
