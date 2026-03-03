@@ -24,11 +24,13 @@
             --text-main: #e6edf3;
         }
 
+        /* ARREGLO MAESTRO PARA ALTURA EN MÓVILES */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%;
+            height: 100vh;
+            height: -webkit-fill-available;
             overflow: hidden;
             position: fixed;
             background-color: var(--bg-dark);
@@ -39,8 +41,11 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            height: 100dvh;
             height: 100vh;
+            height: -webkit-fill-available;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         header {
@@ -117,7 +122,8 @@
 
         footer {
             padding: 12px 20px;
-            padding-bottom: calc(30px + env(safe-area-inset-bottom));
+            /* Margen extra para que el teclado o la barra de iOS no lo tapen */
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
             background: var(--header-footer);
             display: flex;
             gap: 10px;
@@ -135,6 +141,8 @@
             color: white;
             outline: none;
             font-size: 16px;
+            /* Evita zoom automático en iPhone */
+            appearance: none;
         }
 
         #send-btn {
@@ -271,4 +279,3 @@
     </script>
 </body>
 </html>
-
