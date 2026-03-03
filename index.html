@@ -3,18 +3,19 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
-    
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Flok">
     <meta name="mobile-web-app-capable" content="yes">
 
     <title>Flok</title>
-    
+
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
-    
+
     <style>
         :root {
             --bg-dark: #0f1216;
@@ -24,7 +25,8 @@
             --text-main: #e6edf3;
         }
 
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -119,6 +121,19 @@
             border-bottom-left-radius: 4px;
         }
 
+        .message-time {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 5px;
+            display: block;
+            text-align: right;
+            font-weight: 400;
+        }
+
+        .friend .message-time {
+            text-align: left;
+        }
+
         footer {
             padding: 12px 20px;
             /* Margen de seguridad aumentado para evitar que el navegador lo tape */
@@ -157,10 +172,15 @@
 
         #lock-screen {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: var(--bg-dark);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             z-index: 9999;
         }
 
@@ -175,9 +195,12 @@
 
 <body>
     <div id="lock-screen">
-        <span style="font-size: 24px; font-weight: 800; margin-bottom: 20px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Flok Private</span>
+        <span
+            style="font-size: 24px; font-weight: 800; margin-bottom: 20px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Flok
+            Private</span>
         <input type="password" id="pass-input" placeholder="Contraseña...">
-        <button id="unlock-btn" style="background: var(--accent-cyan); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer;">Entrar</button>
+        <button id="unlock-btn"
+            style="background: var(--accent-cyan); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer;">Entrar</button>
     </div>
 
     <div id="app-wrapper">
@@ -212,9 +235,9 @@
         const colRef = collection(db, "mensajes");
 
         const lockScreen = document.getElementById('lock-screen');
-        const passCodificada = "c3VrYWJseWF0"; 
-        const passCorrecta = atob(passCodificada); 
-        
+        const passCodificada = "c3VrYWJseWF0";
+        const passCorrecta = atob(passCodificada);
+
         if (localStorage.getItem('flok_autenticado') === 'true') {
             lockScreen.style.display = 'none';
         }
@@ -261,10 +284,20 @@
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
                 if (!data.fecha) return;
+
+                // ESTO CONVIERTE LA HORA DE FIREBASE A HORA LOCAL
+                const fechaMsg = data.fecha.toDate();
+                const horaLocal = fechaMsg.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
                 const div = document.createElement('div');
                 const claseUsuario = (data.senderId === myId) ? 'me' : 'friend';
                 div.classList.add('message', claseUsuario);
-                div.innerHTML = `<div class="message-text">${data.texto}</div>`;
+
+                // Añadimos el texto y la hora local
+                div.innerHTML = `
+            <div class="message-text">${data.texto}</div>
+            <span class="message-time">${horaLocal}</span>
+        `;
                 chatContainer.appendChild(div);
             });
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -275,4 +308,5 @@
         });
     </script>
 </body>
+
 </html>
