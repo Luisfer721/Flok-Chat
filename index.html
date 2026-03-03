@@ -252,7 +252,6 @@
         const db = getFirestore(app);
         const colRef = collection(db, "mensajes");
 
-        // --- AUDIO Y NOTIFICACIONES ---
         const sonidoNotificacion = new Audio('https://raw.githubusercontent.com/Anis-mgh/whatsapp-clone/master/client/public/sounds/notification.mp3');
 
         async function solicitarPermisos() {
@@ -264,20 +263,22 @@
         }
 
         const lockScreen = document.getElementById('lock-screen');
-        const passCodificada = "c3VrYWJseWF0";
+
+        // Contraseña: sukasuka67
+        const passCodificada = "c3VrYXN1a2E2Nw==";
         const passCorrecta = atob(passCodificada);
 
-        if (localStorage.getItem('flok_autenticado') === 'true') {
+        // Cambiamos a v3 para resetear las sesiones de todos
+        if (localStorage.getItem('flok_v3') === 'true') {
             lockScreen.style.display = 'none';
             solicitarPermisos();
         }
 
         document.getElementById('unlock-btn').addEventListener('click', () => {
             if (document.getElementById('pass-input').value === passCorrecta) {
-                localStorage.setItem('flok_autenticado', 'true');
+                localStorage.setItem('flok_v3', 'true');
                 lockScreen.style.display = 'none';
                 solicitarPermisos();
-                // Desbloqueo silencioso de audio para iOS
                 sonidoNotificacion.play().then(() => {
                     sonidoNotificacion.pause();
                     sonidoNotificacion.currentTime = 0;
@@ -334,11 +335,8 @@
                 `;
                 chatContainer.appendChild(div);
 
-                // --- Lógica de Alerta (Sonido y Notificación) ---
-                // Solo si el mensaje es el último, no es mío y ya pasó la carga inicial
                 if (!primerCarga && index === snapshot.docs.length - 1 && data.senderId !== myId) {
-                    sonidoNotificacion.play().catch(() => console.log("Audio requiere toque"));
-
+                    sonidoNotificacion.play().catch(() => { });
                     if (document.hidden && Notification.permission === "granted") {
                         new Notification("Flok", {
                             body: data.texto,
